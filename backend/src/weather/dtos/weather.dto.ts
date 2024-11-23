@@ -11,7 +11,7 @@ export class CurrentWeatherDto {
   tempMax: number;
   description: string;
   icon: string;
-  rain: Rain;
+  rain?: Rain;
   wind: Wind;
   sunrise: number;
   sunset: number;
@@ -47,7 +47,6 @@ export interface FullWeatherData {
   clouds: Clouds;
   wind: Wind;
   visibility: number;
-  pop: number;
   rain: Rain;
 }
 
@@ -60,7 +59,7 @@ export interface MainWeatherData {
   sea_level: number;
   grnd_level: number;
   humidity: number;
-  temp_kf: number;
+  temp_kf?: number;
 }
 
 export interface WeatherData {
