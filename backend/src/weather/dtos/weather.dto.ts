@@ -4,6 +4,11 @@ export class WeatherQueryDto {
   locale: string;
 }
 
+export class CurrentAndForecastWeatherDto {
+  current: CurrentWeatherDto;
+  forecast: ForecastWeatherDto;
+}
+
 export class CurrentWeatherDto {
   temperature: number;
   feelsLike: number;
@@ -17,12 +22,36 @@ export class CurrentWeatherDto {
   sunset: number;
 }
 
+export class ForecastWeatherDto {
+  timezone: number;
+  forecast: ForecastWeatherTimestamp[];
+}
+
+export class ForecastWeatherTimestamp {
+  UTCtime: number;
+  temperature: number;
+  feelsLike: number;
+  tempMin: number;
+  tempMax: number;
+  main: string;
+  description: string;
+  icon: string;
+  rain?: Rain;
+  wind: Wind;
+}
+[];
+
+export class ForecastSimplifiedWeatherDataDto {
+  timezone: number;
+}
+
 export interface ForecastWeatherResponse {
   cod: string;
   message: number;
   cnt: number;
   list: ForecastWeatherData[];
   city: City;
+  timezone: number;
 }
 
 export interface ForecastWeatherData extends FullWeatherData {

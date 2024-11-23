@@ -1,7 +1,13 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { lastValueFrom } from 'rxjs';
-import { CurrentWeatherDto, CurrentWeatherResponse } from './dtos/weather.dto';
+import {
+  CurrentAndForecastWeatherDto,
+  CurrentWeatherDto,
+  CurrentWeatherResponse,
+  ForecastWeatherDto,
+  ForecastWeatherResponse,
+} from './dtos/weather.dto';
 
 @Injectable()
 export class WeatherService {
@@ -13,9 +19,26 @@ export class WeatherService {
     lat: string,
     lon: string,
     locale: string,
-  ) {
+  ): Promise<CurrentWeatherDto> {
     const apiResponse = await this.fetchCurrentWeather(lat, lon, locale);
     return this.mapCurrentWeather(apiResponse);
+  }
+
+  async getCurrentAndForecastWeather(
+    lat: string,
+    lon: string,
+    locale: string,
+  ): Promise<CurrentAndForecastWeatherDto> {
+    const currentWeather = await this.getCurrentLocationWeatherOverview(
+      lat,
+      lon,
+      locale,
+    );
+    const forecastWeather = await this.getForecastWeather(lat, lon, locale);
+    return {
+      current: currentWeather,
+      forecast: forecastWeather,
+    };
   }
 
   async fetchCurrentWeather(
@@ -33,6 +56,30 @@ export class WeatherService {
     }
   }
 
+  async getForecastWeather(
+    lat: string,
+    lon: string,
+    locale: string,
+  ): Promise<ForecastWeatherDto> {
+    const apiResponse = await this.fetchForecastWeather(lat, lon, locale);
+    return this.mapForecastWeather(apiResponse);
+  }
+
+  async fetchForecastWeather(
+    lat: string,
+    lon: string,
+    locale: string,
+  ): Promise<ForecastWeatherResponse> {
+    const url = `${this.weatherApiUrl}forecast?lat=${lat}&lon=${lon}&appid=${this.apiKey}&units=metric&lang=${locale}`;
+    try {
+      const response = await lastValueFrom(this.httpService.get(url));
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error('Error fetching forecast data');
+    }
+  }
+
   mapCurrentWeather(response: CurrentWeatherResponse): CurrentWeatherDto {
     return {
       temperature: response.main.temp,
@@ -45,6 +92,24 @@ export class WeatherService {
       wind: response.wind,
       sunrise: response.sys.sunrise,
       sunset: response.sys.sunset,
+    };
+  }
+
+  mapForecastWeather(response: ForecastWeatherResponse): ForecastWeatherDto {
+    return {
+      timezone: response.timezone,
+      forecast: response.list.map((forecast) => ({
+        UTCtime: forecast.dt,
+        temperature: forecast.main.temp,
+        feelsLike: forecast.main.feels_like,
+        tempMin: forecast.main.temp_min,
+        tempMax: forecast.main.temp_max,
+        main: forecast.weather[0].main,
+        description: forecast.weather[0].description,
+        icon: forecast.weather[0].icon,
+        rain: forecast.rain,
+        wind: forecast.wind,
+      })),
     };
   }
 }
