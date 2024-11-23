@@ -28,10 +28,8 @@ export class LocationService {
     const url = `${this.locationApiUrl}?q=${query}&limit=5&format=json&accept-language=${locale}&layer=address`;
     try {
       const response = await lastValueFrom(this.httpService.get(url));
-      console.log({ response });
       return response;
     } catch (error) {
-      console.error(error);
       throw new NotFoundException();
     }
   }
@@ -45,8 +43,6 @@ export class LocationService {
     );
     return uniqueResults.map((result) => ({
       name: result.display_name,
-      country: result.country,
-      state: result.state,
       latitude: result.lat,
       longitude: result.lon,
       localName: result.name,

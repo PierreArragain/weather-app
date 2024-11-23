@@ -3,11 +3,9 @@ import { IsString } from 'class-validator';
 export interface LocationApiResult {
   name: string;
   display_name: string;
-  lat: number;
-  lon: number;
-  country: string;
+  lat: string;
+  lon: string;
   importance: number;
-  state: string;
 }
 
 export interface LocationApiResponse {
@@ -23,9 +21,7 @@ export class LocationQueryDto {
 
 export class LocationSuggestionsDto {
   name: string;
-  country: string;
-  state: string;
-  latitude: number;
-  longitude: number;
+  latitude: string;
+  longitude: string;
   localName: string;
 }
