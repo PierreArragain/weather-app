@@ -1,16 +1,47 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { lastValueFrom } from 'rxjs';
+import { Repository } from 'typeorm';
+import { User } from '../user/entity/user.entity';
 import {
   LocationApiResponse,
   LocationSuggestionsDto,
+  SaveUserFavoriteLocationDto,
 } from './dtos/location.dto';
+import { Location } from './entity/location.entity';
 
 @Injectable()
 export class LocationService {
   private readonly locationApiUrl = process.env.LOCATION_API_URL;
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    @InjectRepository(Location)
+    private readonly locationRepository: Repository<Location>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly httpService: HttpService,
+  ) {}
+
+  async saveUserFavoriteLocation(
+    createUserFavoriteLocationDto: SaveUserFavoriteLocationDto,
+  ): Promise<boolean> {
+    const user = await this.userRepository.findOneBy({
+      email: createUserFavoriteLocationDto.email,
+    });
+    let location = await this.locationRepository.findOneBy({
+      latitude: createUserFavoriteLocationDto.location.latitude,
+      longitude: createUserFavoriteLocationDto.location.longitude,
+    });
+    if (!location) {
+      location = {
+        ...createUserFavoriteLocationDto.location,
+      } as Location;
+    }
+    location.users.push(user);
+    await this.locationRepository.save(createUserFavoriteLocationDto.location);
+    return true;
+  }
 
   async searchLocations(
     location: string,

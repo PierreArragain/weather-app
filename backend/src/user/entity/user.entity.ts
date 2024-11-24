@@ -4,10 +4,12 @@ import {
   CreateDateColumn,
   Entity,
   Generated,
+  ManyToMany,
   PrimaryGeneratedColumn,
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
+import { Location } from '../../location/entity/location.entity';
 
 import * as bcrypt from 'bcrypt';
 
@@ -27,6 +29,9 @@ export class User {
 
   @Column({ type: 'varchar', length: 100, select: false })
   password: string;
+
+  @ManyToMany(() => Location, (location) => location.users)
+  favoriteLocations: Location[];
 
   @CreateDateColumn()
   createdAt: Date;
