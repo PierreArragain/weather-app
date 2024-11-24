@@ -16,7 +16,9 @@ export class WeatherController {
   }
 
   @Get('/forecast')
-  async getForecastWeather(@Query() { lat, lon, locale }: WeatherQueryDto) {
+  async getCurrentAndForecastWeather(
+    @Query() { lat, lon, locale }: WeatherQueryDto,
+  ) {
     return this.weatherService.getCurrentAndForecastWeather(lat, lon, locale);
   }
 }
