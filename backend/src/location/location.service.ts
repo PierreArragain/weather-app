@@ -8,7 +8,6 @@ import {
 
 @Injectable()
 export class LocationService {
-  private readonly apiKey = process.env.OPENWEATHERMAP_API_KEY;
   private readonly locationApiUrl = process.env.LOCATION_API_URL;
 
   constructor(private readonly httpService: HttpService) {}
