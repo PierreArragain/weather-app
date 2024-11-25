@@ -20,8 +20,8 @@ export class AuthenticationGuard implements CanActivate {
     }
   }
 
-  checkToken(request, token: string): boolean {
-    request.session = this.jwtService.verify(token);
+  async checkToken(request, token: string): Promise<boolean> {
+    request.session = await this.jwtService.verify(token);
     return true;
   }
 }

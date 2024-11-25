@@ -1,12 +1,13 @@
 import { Global, Module } from '@nestjs/common';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseConfiguration } from './database/database.configuration';
 import { LocationModule } from './location/location.module';
-import { WeatherModule } from './weather/weather.module';
 import { UserModule } from './user/user.module';
-import { JwtModule } from '@nestjs/jwt';
+import { WeatherModule } from './weather/weather.module';
+import { AuthenticationGuard } from './acl/authentication.guard';
 
 @Global()
 @Module({
@@ -22,6 +23,6 @@ import { JwtModule } from '@nestjs/jwt';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, JwtService, AuthenticationGuard],
 })
 export class AppModule {}
