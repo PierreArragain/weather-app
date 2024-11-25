@@ -44,6 +44,22 @@ export class LocationService {
     return true;
   }
 
+  async getUserFavoriteLocations(userEmail: string): Promise<Location[]> {
+    return this.locationRepository.find({
+      select: {
+        name: true,
+        latitude: true,
+        longitude: true,
+        localName: true,
+      },
+      where: {
+        users: {
+          email: userEmail,
+        },
+      },
+    });
+  }
+
   async searchLocations(
     location: string,
     locale: string,

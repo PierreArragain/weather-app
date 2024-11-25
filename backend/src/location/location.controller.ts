@@ -7,6 +7,7 @@ import {
 import { LocationService } from './location.service';
 import { AuthenticationGuard } from 'src/acl/authentication.guard';
 import { SessionUserEmail } from 'src/acl/session-user-email.decorator';
+import { Location } from './entity/location.entity';
 
 @UseGuards(AuthenticationGuard)
 @Controller('location')
@@ -18,6 +19,12 @@ export class LocationController {
     @Query() { location, locale }: LocationQueryDto,
   ): Promise<LocationSuggestionsDto[]> {
     return this.locationService.searchLocations(location, locale);
+  }
+  @Get('/user-favorites')
+  async getUserFavoriteLocations(
+    @SessionUserEmail() email: string,
+  ): Promise<Location[]> {
+    return this.locationService.getUserFavoriteLocations(email);
   }
 
   @Post()
