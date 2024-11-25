@@ -18,7 +18,6 @@ import {
 import { Location } from './entity/location.entity';
 import { LocationService } from './location.service';
 
-@UseGuards(AuthenticationGuard)
 @Controller('location')
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
@@ -29,14 +28,14 @@ export class LocationController {
   ): Promise<LocationSuggestionsDto[]> {
     return this.locationService.searchLocations(location, locale);
   }
-
+  @UseGuards(AuthenticationGuard)
   @Get('/user-favorites')
   async getUserFavoriteLocations(
     @SessionUserEmail() email: string,
   ): Promise<Location[]> {
     return this.locationService.getUserFavoriteLocations(email);
   }
-
+  @UseGuards(AuthenticationGuard)
   @Post()
   async saveUserFavoriteLocation(
     @Body() createLocationDto: CreateLocationDto,
@@ -47,7 +46,7 @@ export class LocationController {
       createLocationDto,
     );
   }
-
+  @UseGuards(AuthenticationGuard)
   @Delete(':id')
   async deleteUserFavoriteLocation(
     @Param('id') id: number,
