@@ -5,9 +5,9 @@ import { lastValueFrom } from 'rxjs';
 import { Repository } from 'typeorm';
 import { User } from '../user/entity/user.entity';
 import {
+  CreateLocationDto,
   LocationApiResponse,
   LocationSuggestionsDto,
-  SaveUserFavoriteLocationDto,
 } from './dtos/location.dto';
 import { Location } from './entity/location.entity';
 
@@ -24,22 +24,23 @@ export class LocationService {
   ) {}
 
   async saveUserFavoriteLocation(
-    createUserFavoriteLocationDto: SaveUserFavoriteLocationDto,
+    email: string,
+    createLocationDto: CreateLocationDto,
   ): Promise<boolean> {
     const user = await this.userRepository.findOneBy({
-      email: createUserFavoriteLocationDto.email,
+      email: email,
     });
     let location = await this.locationRepository.findOneBy({
-      latitude: createUserFavoriteLocationDto.location.latitude,
-      longitude: createUserFavoriteLocationDto.location.longitude,
+      latitude: createLocationDto.latitude,
+      longitude: createLocationDto.longitude,
     });
     if (!location) {
       location = {
-        ...createUserFavoriteLocationDto.location,
+        ...createLocationDto,
       } as Location;
     }
     location.users.push(user);
-    await this.locationRepository.save(createUserFavoriteLocationDto.location);
+    await this.locationRepository.save(location);
     return true;
   }
 
