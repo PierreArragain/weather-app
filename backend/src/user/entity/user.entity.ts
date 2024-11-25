@@ -4,6 +4,7 @@ import {
   CreateDateColumn,
   Entity,
   Generated,
+  JoinTable,
   ManyToMany,
   PrimaryGeneratedColumn,
   Unique,
@@ -31,6 +32,7 @@ export class User {
   password: string;
 
   @ManyToMany(() => Location, (location) => location.users)
+  @JoinTable()
   favoriteLocations: Location[];
 
   @CreateDateColumn()
