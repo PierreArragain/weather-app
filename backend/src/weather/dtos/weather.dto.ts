@@ -39,7 +39,6 @@ export class ForecastWeatherTimestamp {
   rain?: Rain;
   wind: Wind;
 }
-[];
 
 export class ForecastSimplifiedWeatherDataDto {
   timezone: number;
