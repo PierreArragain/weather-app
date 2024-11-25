@@ -25,3 +25,23 @@ export class LocationSuggestionsDto {
   longitude: string;
   localName: string;
 }
+
+export class SaveUserFavoriteLocationDto {
+  @IsString()
+  email: string;
+  location: CreateLocationDto;
+}
+
+export class CreateLocationDto implements LocationSuggestionsDto {
+  @IsString()
+  name: string;
+
+  @IsString()
+  latitude: string;
+
+  @IsString()
+  longitude: string;
+
+  @IsString()
+  localName: string;
+}
