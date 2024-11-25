@@ -1,13 +1,22 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthenticationGuard } from '../acl/authentication.guard';
+import { SessionUserEmail } from '../acl/session-user-email.decorator';
 import {
   CreateLocationDto,
   LocationQueryDto,
   LocationSuggestionsDto,
 } from './dtos/location.dto';
-import { LocationService } from './location.service';
-import { AuthenticationGuard } from 'src/acl/authentication.guard';
-import { SessionUserEmail } from 'src/acl/session-user-email.decorator';
 import { Location } from './entity/location.entity';
+import { LocationService } from './location.service';
 
 @UseGuards(AuthenticationGuard)
 @Controller('location')
@@ -20,6 +29,7 @@ export class LocationController {
   ): Promise<LocationSuggestionsDto[]> {
     return this.locationService.searchLocations(location, locale);
   }
+
   @Get('/user-favorites')
   async getUserFavoriteLocations(
     @SessionUserEmail() email: string,
@@ -36,5 +46,13 @@ export class LocationController {
       email,
       createLocationDto,
     );
+  }
+
+  @Delete(':id')
+  async deleteUserFavoriteLocation(
+    @Param('id') id: number,
+    @SessionUserEmail() email: string,
+  ): Promise<boolean> {
+    return this.locationService.deleteLocationFromUserFavorites(email, id);
   }
 }

@@ -1,5 +1,9 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { lastValueFrom } from 'rxjs';
 import { Repository } from 'typeorm';
@@ -37,6 +41,7 @@ export class LocationService {
     if (!location) {
       location = {
         ...createLocationDto,
+        users: [],
       } as Location;
     }
     location.users.push(user);
@@ -46,18 +51,36 @@ export class LocationService {
 
   async getUserFavoriteLocations(userEmail: string): Promise<Location[]> {
     return this.locationRepository.find({
-      select: {
-        name: true,
-        latitude: true,
-        longitude: true,
-        localName: true,
-      },
       where: {
         users: {
           email: userEmail,
         },
       },
     });
+  }
+
+  async deleteLocationFromUserFavorites(
+    userEmail: string,
+    locationId: number,
+  ): Promise<boolean> {
+    const user = await this.userRepository.findOneBy({
+      email: userEmail,
+    });
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    const location = await this.locationRepository.findOne({
+      where: {
+        id: locationId,
+      },
+      relations: {
+        users: true,
+      },
+    });
+    location.users = location.users.filter((u) => u.email !== userEmail);
+    await this.locationRepository.save(location);
+    return true;
   }
 
   async searchLocations(
