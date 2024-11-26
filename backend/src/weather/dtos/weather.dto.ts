@@ -24,7 +24,21 @@ export class CurrentWeatherDto {
 
 export class ForecastWeatherDto {
   timezone: number;
+  cityName: string;
   forecast: ForecastWeatherTimestamp[];
+}
+
+export class CurrentAndForecastFourTimestampsADayDto {
+  current: CurrentWeatherDto;
+  forecast: ForecastFourTimestampsADayDto;
+}
+
+export class ForecastFourTimestampsADayDto {
+  timezone: number;
+  morning: ForecastWeatherTimestamp;
+  afternoon: ForecastWeatherTimestamp;
+  evening: ForecastWeatherTimestamp;
+  night: ForecastWeatherTimestamp;
 }
 
 export class ForecastWeatherTimestamp {
@@ -38,6 +52,7 @@ export class ForecastWeatherTimestamp {
   icon: string;
   rain?: Rain;
   wind: Wind;
+  localTime: Date;
 }
 
 export class ForecastSimplifiedWeatherDataDto {
@@ -50,7 +65,6 @@ export interface ForecastWeatherResponse {
   cnt: number;
   list: ForecastWeatherData[];
   city: City;
-  timezone: number;
 }
 
 export interface ForecastWeatherData extends FullWeatherData {

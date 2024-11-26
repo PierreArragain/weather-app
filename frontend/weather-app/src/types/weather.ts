@@ -18,11 +18,13 @@ export interface CurrentWeatherDto {
 
 export interface ForecastWeatherDto {
   timezone: number;
+  cityName: string;
   forecast: ForecastWeatherTimestamp[];
 }
 
 export interface ForecastWeatherTimestamp {
   UTCtime: number;
+  localTime: Date;
   temperature: number;
   feelsLike: number;
   tempMin: number;

@@ -1,6 +1,7 @@
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { LocationSuggestionDto } from "../../types/location";
 import { CurrentAndForecastWeatherDto } from "../../types/weather";
 
 const WeatherPage = () => {
@@ -82,6 +83,7 @@ const WeatherPage = () => {
         mb={2}
       >
         <Box>
+          <Typography variant="h6">{forecast.cityName}</Typography>
           <Typography variant="h4" fontWeight="bold">
             {Math.round(current.temperature)}°C
           </Typography>
@@ -116,8 +118,13 @@ const WeatherPage = () => {
             minWidth={100}
           >
             <Typography variant="subtitle2">
-              {new Date(day.UTCtime).toLocaleDateString("fr-FR", {
+              {new Date(day.localTime).toLocaleDateString("fr-FR", {
                 weekday: "short",
+              })}
+            </Typography>
+            <Typography variant="subtitle2">
+              {new Date(day.localTime).toLocaleTimeString("fr-FR", {
+                hour: "2-digit",
               })}
             </Typography>
             <img

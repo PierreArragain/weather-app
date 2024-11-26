@@ -5,6 +5,7 @@ import {
   CurrentAndForecastWeatherDto,
   CurrentWeatherDto,
   CurrentWeatherResponse,
+  ForecastWeatherData,
   ForecastWeatherDto,
   ForecastWeatherResponse,
 } from './dtos/weather.dto';
@@ -96,10 +97,13 @@ export class WeatherService {
   }
 
   mapForecastWeather(response: ForecastWeatherResponse): ForecastWeatherDto {
+    const filteredList = this.filterForecastListFourTimestampsADay(response);
     return {
-      timezone: response.timezone,
-      forecast: response.list.map((forecast) => ({
+      timezone: response.city.timezone,
+      cityName: response.city.name,
+      forecast: filteredList.map((forecast) => ({
         UTCtime: forecast.dt,
+        localTime: new Date((forecast.dt + response.city.timezone) * 1000),
         temperature: forecast.main.temp,
         feelsLike: forecast.main.feels_like,
         tempMin: forecast.main.temp_min,
@@ -111,5 +115,44 @@ export class WeatherService {
         wind: forecast.wind,
       })),
     };
+  }
+
+  filterForecastListFourTimestampsADay(
+    response: ForecastWeatherResponse,
+  ): ForecastWeatherData[] {
+    const firstDay = new Date(response.list[0].dt * 1000).getUTCDate();
+
+    const secondDayForecasts = response.list.filter((forecast) => {
+      const forecastDay = new Date(
+        (forecast.dt + response.city.timezone) * 1000,
+      ).getUTCDate();
+      return forecastDay !== firstDay;
+    });
+
+    const firstRelevantForecast = secondDayForecasts.find((forecast) => {
+      const localTime = new Date(
+        (forecast.dt + response.city.timezone) * 1000,
+      ).getHours();
+      return localTime >= 6;
+    });
+
+    const firstHour = new Date(
+      (firstRelevantForecast.dt + response.city.timezone) * 1000,
+    ).getHours();
+
+    const targetHours = [
+      firstHour,
+      (firstHour + 6) % 24,
+      (firstHour + 12) % 24,
+      (firstHour + 18) % 24,
+    ];
+
+    const filteredList = response.list.filter((forecast) => {
+      const localTime = new Date((forecast.dt + response.city.timezone) * 1000);
+      const hour = localTime.getHours();
+      return targetHours.includes(hour);
+    });
+
+    return filteredList;
   }
 }
