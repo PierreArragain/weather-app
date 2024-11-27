@@ -2,12 +2,15 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { lastValueFrom } from 'rxjs';
 import {
-  CurrentAndForecastWeatherDto,
+  CurrentTodayAndForecastsByDayDto,
   CurrentWeatherDto,
   CurrentWeatherResponse,
-  ForecastWeatherData,
+  ForecastByDayDto,
   ForecastWeatherDto,
   ForecastWeatherResponse,
+  ForecastWeatherTimestamp,
+  TodayAndComingDaysForecastDto,
+  WeatherSummary,
 } from './dtos/weather.dto';
 
 @Injectable()
@@ -29,16 +32,21 @@ export class WeatherService {
     lat: string,
     lon: string,
     locale: string,
-  ): Promise<CurrentAndForecastWeatherDto> {
+  ): Promise<CurrentTodayAndForecastsByDayDto> {
     const currentWeather = await this.getCurrentLocationWeatherOverview(
       lat,
       lon,
       locale,
     );
-    const forecastWeather = await this.getForecastWeather(lat, lon, locale);
+    const { today, forecasts } = await this.getTodayAndComingDaysForecast(
+      lat,
+      lon,
+      locale,
+    );
     return {
       current: currentWeather,
-      forecast: forecastWeather,
+      today,
+      forecasts,
     };
   }
 
@@ -57,13 +65,33 @@ export class WeatherService {
     }
   }
 
-  async getForecastWeather(
+  async getTodayAndComingDaysForecast(
     lat: string,
     lon: string,
     locale: string,
+  ): Promise<TodayAndComingDaysForecastDto> {
+    const apiResponse = await this.fetchForecastWeather(lat, lon, locale);
+    const today = this.getDailyWeatherForecast(
+      new Date().getUTCDate(),
+      apiResponse,
+    );
+    const comingDaysForecast =
+      this.getDailyForecastListForComingDays(apiResponse);
+
+    return {
+      today,
+      forecasts: comingDaysForecast,
+    };
+  }
+
+  async getTwentyFourHourForecastWeather(
+    lat: string,
+    lon: string,
+    day: number,
+    locale: string,
   ): Promise<ForecastWeatherDto> {
     const apiResponse = await this.fetchForecastWeather(lat, lon, locale);
-    return this.mapForecastWeather(apiResponse);
+    return this.getDailyWeatherForecast(day, apiResponse);
   }
 
   async fetchForecastWeather(
@@ -96,14 +124,70 @@ export class WeatherService {
     };
   }
 
-  mapForecastWeather(response: ForecastWeatherResponse): ForecastWeatherDto {
-    const filteredList = this.filterForecastListFourTimestampsADay(response);
+  getDailyForecastListForComingDays(
+    response: ForecastWeatherResponse,
+  ): ForecastByDayDto[] {
+    const daysForecast: ForecastByDayDto[] = [];
+    const timezone = response.city.timezone;
+    const forecastByDay: { [day: number]: ForecastWeatherTimestamp[] } = {};
+
+    for (const timestamp of response.list) {
+      const forecastDay = new Date(
+        (timestamp.dt + timezone) * 1000,
+      ).getUTCDate();
+      if (!forecastByDay[forecastDay]) {
+        forecastByDay[forecastDay] = [];
+      }
+      forecastByDay[forecastDay].push({
+        UTCtime: timestamp.dt,
+        localTime: new Date((timestamp.dt + timezone) * 1000),
+        temperature: timestamp.main.temp,
+        feelsLike: timestamp.main.feels_like,
+        tempMin: timestamp.main.temp_min,
+        tempMax: timestamp.main.temp_max,
+        main: timestamp.weather[0].main,
+        description: timestamp.weather[0].description,
+        icon: timestamp.weather[0].icon,
+        rain: timestamp.rain,
+        wind: timestamp.wind,
+      });
+    }
+
+    for (const day in forecastByDay) {
+      const dayForecasts = forecastByDay[day];
+      const daySummary = this.getDaySummaryWeather(dayForecasts);
+      daysForecast.push({
+        weekDay: new Date(dayForecasts[0].localTime).toLocaleDateString(
+          'fr-FR',
+          { weekday: 'long' },
+        ),
+        weatherSummary: daySummary,
+        maxTemp: Math.max(...dayForecasts.map((forecast) => forecast.tempMax)),
+        minTemp: Math.min(...dayForecasts.map((forecast) => forecast.tempMin)),
+        timezone: timezone,
+        numberDay: new Date(dayForecasts[0].localTime).getUTCDate(),
+      });
+    }
+
+    return daysForecast;
+  }
+
+  getDailyWeatherForecast(day: number, forecast: ForecastWeatherResponse) {
+    const timezone = forecast.city.timezone;
+
+    const filteredList = forecast.list.filter((timestamp) => {
+      const forecastDay = new Date(
+        (timestamp.dt + timezone) * 1000,
+      ).getUTCDate();
+      return forecastDay === day;
+    });
+
     return {
-      timezone: response.city.timezone,
-      cityName: response.city.name,
-      forecast: filteredList.map((forecast) => ({
+      timezone: timezone,
+      cityName: forecast.city.name,
+      timestamps: filteredList.map((forecast) => ({
         UTCtime: forecast.dt,
-        localTime: new Date((forecast.dt + response.city.timezone) * 1000),
+        localTime: new Date((forecast.dt + timezone) * 1000),
         temperature: forecast.main.temp,
         feelsLike: forecast.main.feels_like,
         tempMin: forecast.main.temp_min,
@@ -117,42 +201,63 @@ export class WeatherService {
     };
   }
 
-  filterForecastListFourTimestampsADay(
-    response: ForecastWeatherResponse,
-  ): ForecastWeatherData[] {
-    const firstDay = new Date(response.list[0].dt * 1000).getUTCDate();
+  getDaySummaryWeather(forecasts: ForecastWeatherTimestamp[]): WeatherSummary {
+    if (forecasts.length === 0) {
+      throw new Error('La liste des prévisions est vide.');
+    }
 
-    const secondDayForecasts = response.list.filter((forecast) => {
-      const forecastDay = new Date(
-        (forecast.dt + response.city.timezone) * 1000,
-      ).getUTCDate();
-      return forecastDay !== firstDay;
-    });
+    const mainFrequency: {
+      [main: string]: { count: number; icon: string; description: string };
+    } = {};
 
-    const firstRelevantForecast = secondDayForecasts.find((forecast) => {
-      const localTime = new Date(
-        (forecast.dt + response.city.timezone) * 1000,
-      ).getHours();
-      return localTime >= 6;
-    });
+    for (const forecast of forecasts) {
+      if (forecast.main) {
+        if (!mainFrequency[forecast.main]) {
+          mainFrequency[forecast.main] = {
+            count: 0,
+            icon: forecast.icon,
+            description: forecast.description,
+          };
+        }
+        mainFrequency[forecast.main].count++;
+      }
+    }
 
-    const firstHour = new Date(
-      (firstRelevantForecast.dt + response.city.timezone) * 1000,
-    ).getHours();
+    let mostFrequentMain: string | null = null;
+    let maxFrequency = 0;
 
-    const targetHours = [
-      firstHour,
-      (firstHour + 6) % 24,
-      (firstHour + 12) % 24,
-      (firstHour + 18) % 24,
-    ];
+    for (const main in mainFrequency) {
+      if (mainFrequency[main].count > maxFrequency) {
+        maxFrequency = mainFrequency[main].count;
+        mostFrequentMain = main;
+      }
+    }
 
-    const filteredList = response.list.filter((forecast) => {
-      const localTime = new Date((forecast.dt + response.city.timezone) * 1000);
-      const hour = localTime.getHours();
-      return targetHours.includes(hour);
-    });
+    if (mostFrequentMain) {
+      const { icon, description } = mainFrequency[mostFrequentMain];
+      return { main: mostFrequentMain, icon, description };
+    }
 
-    return filteredList;
+    const noonTime = 12;
+    let closestToNoon = forecasts[0];
+    let closestHourDiff = Math.abs(
+      closestToNoon.localTime.getHours() - noonTime,
+    );
+
+    for (const forecast of forecasts) {
+      const currentHourDiff = Math.abs(
+        forecast.localTime.getHours() - noonTime,
+      );
+      if (currentHourDiff < closestHourDiff) {
+        closestToNoon = forecast;
+        closestHourDiff = currentHourDiff;
+      }
+    }
+
+    return {
+      main: closestToNoon.main,
+      icon: closestToNoon.icon,
+      description: closestToNoon.description,
+    };
   }
 }

@@ -25,12 +25,21 @@ export class CurrentWeatherDto {
 export class ForecastWeatherDto {
   timezone: number;
   cityName: string;
-  forecast: ForecastWeatherTimestamp[];
+  timestamps: ForecastWeatherTimestamp[];
 }
 
 export class CurrentAndForecastFourTimestampsADayDto {
   current: CurrentWeatherDto;
   forecast: ForecastFourTimestampsADayDto;
+}
+
+export class TodayAndComingDaysForecastDto {
+  today: ForecastWeatherDto;
+  forecasts: ForecastByDayDto[];
+}
+
+export class CurrentTodayAndForecastsByDayDto extends TodayAndComingDaysForecastDto {
+  current: CurrentWeatherDto;
 }
 
 export class ForecastFourTimestampsADayDto {
@@ -39,6 +48,21 @@ export class ForecastFourTimestampsADayDto {
   afternoon: ForecastWeatherTimestamp;
   evening: ForecastWeatherTimestamp;
   night: ForecastWeatherTimestamp;
+}
+
+export class ForecastByDayDto {
+  timezone: number;
+  weekDay: string;
+  numberDay: number;
+  minTemp: number;
+  maxTemp: number;
+  weatherSummary: WeatherSummary;
+}
+
+export class WeatherSummary {
+  main: string;
+  description: string;
+  icon: string;
 }
 
 export class ForecastWeatherTimestamp {
