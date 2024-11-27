@@ -1,5 +1,9 @@
 import { IsEmail, IsNotEmpty } from 'class-validator';
 
+export interface AuthenticatedRequest extends Request {
+  session?: JwtPayload;
+}
+
 export interface JwtPayload {
   email: string;
   uuid: string;
