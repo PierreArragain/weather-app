@@ -95,7 +95,7 @@ describe('LocationService', () => {
       location.users = [user];
 
       jest.spyOn(userRepository, 'findOneBy').mockResolvedValue(user);
-      jest.spyOn(locationRepository, 'findOneBy').mockResolvedValue(location);
+      jest.spyOn(locationRepository, 'findOne').mockResolvedValue(location);
       jest.spyOn(locationRepository, 'save').mockResolvedValue(location);
 
       const result = await service.deleteLocationFromUserFavorites(

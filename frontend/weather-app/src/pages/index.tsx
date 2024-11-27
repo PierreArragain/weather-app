@@ -18,7 +18,7 @@ export default function Home() {
   const handleSelect = (selectedOption: LocationSuggestionDto | null) => {
     if (selectedOption) {
       const { latitude, longitude } = selectedOption;
-      router.push(`/weather/${latitude}/${longitude}`);
+      router.push(`/weather/forecast?lat=${latitude}&lon=${longitude}`);
     }
   };
 
