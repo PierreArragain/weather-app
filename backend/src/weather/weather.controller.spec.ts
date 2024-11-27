@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CurrentWeatherDto, WeatherQueryDto } from './dtos/weather.dto';
+import {
+  CurrentTodayAndForecastsByDayDto,
+  CurrentWeatherDto,
+  WeatherQueryDto,
+} from './dtos/weather.dto';
 import { WeatherController } from './weather.controller';
 import { WeatherService } from './weather.service';
 
@@ -64,69 +68,84 @@ describe('WeatherController', () => {
         weatherQueryDto.locale,
       );
     });
-  });
-  describe('getForecastWeather', () => {
-    it('should call getCurrentAndForecastWeather with correct parameters', async () => {
-      const weatherQueryDto: WeatherQueryDto = {
-        lat: '50.7202',
-        lon: '-1.8799',
-        locale: 'fr',
-      };
-      const result = {
-        current: {
-          temperature: 14.01,
-          feelsLike: 13.97,
-          tempMin: 12.71,
-          tempMax: 14.67,
-          description: 'pluie modérée',
-          icon: '10n',
-          rain: {
-            '1h': 0.55,
+
+    describe('getCurrentAndForecastWeather', () => {
+      it('should call getCurrentAndForecastWeather with correct parameters', async () => {
+        const weatherQueryDto: WeatherQueryDto = {
+          lat: '40.7128',
+          lon: '-74.0060',
+          locale: 'fr',
+        };
+        const result: CurrentTodayAndForecastsByDayDto = {
+          current: {
+            temperature: 12.14,
+            feelsLike: 11.42,
+            tempMin: 12.1,
+            tempMax: 12.17,
+            description: 'couvert',
+            icon: '04n',
+            wind: {
+              speed: 10.6,
+              deg: 191,
+              gust: 21.43,
+            },
+            sunrise: 1732346310,
+            sunset: 1732378724,
           },
-          wind: {
-            speed: 9.77,
-            deg: 210,
-            gust: 14.92,
-          },
-          sunrise: 1732347380,
-          sunset: 1732378324,
-        },
-        forecast: {
-          timezone: 0,
-          forecast: [
-            {
-              UTCtime: 1732387880,
-              temperature: 14.01,
-              feelsLike: 13.97,
-              tempMin: 12.71,
-              tempMax: 14.67,
-              main: 'Rain',
-              description: 'pluie modérée',
-              icon: '10n',
-              rain: {
-                '3h': 0.55,
+          today: {
+            timezone: 7200,
+            cityName: 'New York',
+
+            timestamps: [
+              {
+                UTCtime: 1732346310,
+                localTime: new Date(1732346310 * 1000),
+                temperature: 12.14,
+                feelsLike: 11.42,
+                tempMin: 12.1,
+                tempMax: 12.17,
+                main: 'Clouds',
+                description: 'couvert',
+                icon: '04n',
+                wind: {
+                  speed: 10.6,
+                  deg: 191,
+                  gust: 21.43,
+                },
               },
-              wind: {
-                speed: 9.77,
-                deg: 210,
-                gust: 14.92,
+            ],
+          },
+          forecasts: [
+            {
+              timezone: 7200,
+              weekDay: 'Monday',
+              numberDay: 1,
+              fullDate: new Date(1732346310 * 1000),
+              minTemp: 12.1,
+              maxTemp: 12.17,
+              weatherSummary: {
+                main: 'Clouds',
+                description: 'couvert',
+                icon: '04n',
               },
             },
           ],
-        },
-      };
-      jest
-        .spyOn(weatherService, 'getCurrentAndForecastWeather')
-        .mockResolvedValue(result);
+        };
+        jest
+          .spyOn(weatherService, 'getCurrentAndForecastWeather')
+          .mockResolvedValue(result);
 
-      expect(
-        await controller.getCurrentAndForecastWeather(weatherQueryDto),
-      ).toBe(result);
-      expect(weatherService.getCurrentAndForecastWeather).toHaveBeenCalledWith(
-        weatherQueryDto.lat,
-        weatherQueryDto.lon,
-        weatherQueryDto.locale,
-      );
+        expect(
+          await controller.getCurrentAndForecastWeather(weatherQueryDto),
+        ).toBe(result);
+        expect(
+          weatherService.getCurrentAndForecastWeather,
+        ).toHaveBeenCalledWith(
+          weatherQueryDto.lat,
+          weatherQueryDto.lon,
+          weatherQueryDto.locale,
+        );
+      });
     });
   });
 });
