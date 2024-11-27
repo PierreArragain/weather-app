@@ -120,6 +120,7 @@ describe('WeatherController', () => {
               timezone: 7200,
               weekDay: 'Monday',
               numberDay: 1,
+              fullDate: new Date(1732346310 * 1000),
               minTemp: 12.1,
               maxTemp: 12.17,
               weatherSummary: {

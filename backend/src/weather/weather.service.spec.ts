@@ -5,6 +5,7 @@ import { of, throwError } from 'rxjs';
 import {
   CurrentWeatherResponse,
   ForecastWeatherResponse,
+  TodayAndComingDaysForecastDto,
 } from './dtos/weather.dto';
 import { WeatherService } from './weather.service';
 
@@ -677,7 +678,7 @@ describe('WeatherService', () => {
             sunset: 1732378324,
           };
 
-          const mockTodayAndForecasts = {
+          const mockTodayAndForecasts: TodayAndComingDaysForecastDto = {
             today: {
               timezone: 0,
               cityName: 'Bournemouth',
@@ -706,6 +707,7 @@ describe('WeatherService', () => {
             forecasts: [
               {
                 weekDay: 'samedi',
+                fullDate: new Date(1732387880 * 1000),
                 weatherSummary: {
                   main: 'Rain',
                   icon: '10n',
@@ -718,6 +720,7 @@ describe('WeatherService', () => {
               },
               {
                 weekDay: 'dimanche',
+                fullDate: new Date(1732474280 * 1000),
                 weatherSummary: {
                   main: 'Clear',
                   icon: '01d',

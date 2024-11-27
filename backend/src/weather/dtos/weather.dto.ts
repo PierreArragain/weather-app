@@ -54,6 +54,7 @@ export class ForecastByDayDto {
   timezone: number;
   weekDay: string;
   numberDay: number;
+  fullDate: Date;
   minTemp: number;
   maxTemp: number;
   weatherSummary: WeatherSummary;

@@ -71,10 +71,7 @@ export class WeatherService {
     locale: string,
   ): Promise<TodayAndComingDaysForecastDto> {
     const apiResponse = await this.fetchForecastWeather(lat, lon, locale);
-    const today = this.getDailyWeatherForecast(
-      new Date().getUTCDate(),
-      apiResponse,
-    );
+    const today = this.getDailyWeatherForecast(new Date(), apiResponse);
     const comingDaysForecast =
       this.getDailyForecastListForComingDays(apiResponse);
 
@@ -87,11 +84,11 @@ export class WeatherService {
   async getTwentyFourHourForecastWeather(
     lat: string,
     lon: string,
-    day: number,
+    startTime: Date,
     locale: string,
   ): Promise<ForecastWeatherDto> {
     const apiResponse = await this.fetchForecastWeather(lat, lon, locale);
-    return this.getDailyWeatherForecast(day, apiResponse);
+    return this.getDailyWeatherForecast(startTime, apiResponse);
   }
 
   async fetchForecastWeather(
@@ -132,13 +129,13 @@ export class WeatherService {
     const forecastByDay: { [day: number]: ForecastWeatherTimestamp[] } = {};
 
     for (const timestamp of response.list) {
-      const forecastDay = new Date(
-        (timestamp.dt + timezone) * 1000,
-      ).getUTCDate();
-      if (!forecastByDay[forecastDay]) {
-        forecastByDay[forecastDay] = [];
+      const forecastDay = new Date((timestamp.dt + timezone) * 1000);
+      forecastDay.setUTCHours(0, 0, 0, 0);
+      const forecastDayNumber = forecastDay.getUTCDate();
+      if (!forecastByDay[forecastDayNumber]) {
+        forecastByDay[forecastDayNumber] = [];
       }
-      forecastByDay[forecastDay].push({
+      forecastByDay[forecastDayNumber].push({
         UTCtime: timestamp.dt,
         localTime: new Date((timestamp.dt + timezone) * 1000),
         temperature: timestamp.main.temp,
@@ -161,6 +158,7 @@ export class WeatherService {
           'fr-FR',
           { weekday: 'long' },
         ),
+        fullDate: new Date(dayForecasts[0].localTime),
         weatherSummary: daySummary,
         maxTemp: Math.max(...dayForecasts.map((forecast) => forecast.tempMax)),
         minTemp: Math.min(...dayForecasts.map((forecast) => forecast.tempMin)),
@@ -169,17 +167,23 @@ export class WeatherService {
       });
     }
 
-    return daysForecast;
+    return daysForecast.sort(
+      (a, b) => a.fullDate.getTime() - b.fullDate.getTime(),
+    );
   }
 
-  getDailyWeatherForecast(day: number, forecast: ForecastWeatherResponse) {
+  getDailyWeatherForecast(
+    startTime: Date,
+    forecast: ForecastWeatherResponse,
+  ): ForecastWeatherDto {
     const timezone = forecast.city.timezone;
 
     const filteredList = forecast.list.filter((timestamp) => {
-      const forecastDay = new Date(
-        (timestamp.dt + timezone) * 1000,
-      ).getUTCDate();
-      return forecastDay === day;
+      const forecastTime = new Date((timestamp.dt + timezone) * 1000);
+      return (
+        forecastTime >= startTime &&
+        forecastTime <= new Date(startTime.getTime() + 24 * 60 * 60 * 1000)
+      );
     });
 
     return {
