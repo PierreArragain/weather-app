@@ -2,7 +2,6 @@ export interface CurrentAndForecastWeatherDto {
   current: CurrentWeatherDto;
   forecast: ForecastWeatherDto;
 }
-
 export interface CurrentWeatherDto {
   temperature: number;
   feelsLike: number;
@@ -19,7 +18,7 @@ export interface CurrentWeatherDto {
 export interface ForecastWeatherDto {
   timezone: number;
   cityName: string;
-  forecast: ForecastWeatherTimestamp[];
+  timestamps: ForecastWeatherTimestamp[];
 }
 
 export interface ForecastWeatherTimestamp {
@@ -44,4 +43,30 @@ export interface Wind {
 
 export interface Rain {
   [key: string]: number;
+}
+
+export interface WeatherSummary {
+  main: string;
+  description: string;
+  icon: string;
+}
+
+export interface ForecastByDayDto {
+  timezone: number;
+  weekDay: string;
+  numberDay: number;
+  fullDate: string;
+  minTemp: number;
+  maxTemp: number;
+  weatherSummary: WeatherSummary;
+}
+
+export interface TodayAndComingDaysForecastDto {
+  today: ForecastWeatherDto;
+  forecasts: ForecastByDayDto[];
+}
+
+export interface CurrentTodayAndForecastsByDayDto
+  extends TodayAndComingDaysForecastDto {
+  current: CurrentWeatherDto;
 }
