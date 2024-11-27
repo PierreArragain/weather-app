@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from "@mui/material";
+import { Alert, Box, Button, Snackbar, Typography } from "@mui/material";
 import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -15,6 +15,22 @@ export default function Home() {
   const { authenticated, checkAuth } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
 
+  // Snackbar state
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
+    "success",
+  );
+
+  // Snackbar helpers
+  const handleSnackbarClose = () => setSnackbarOpen(false);
+
+  const triggerSnackbar = (message: string, severity: "success" | "error") => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
   const handleSelect = (selectedOption: LocationSuggestionDto | null) => {
     if (selectedOption) {
       const { latitude, longitude } = selectedOption;
@@ -30,8 +46,10 @@ export default function Home() {
       });
 
       if (response.ok) {
+        triggerSnackbar("Déconnexion réussie", "success");
         checkAuth();
       } else {
+        triggerSnackbar("Erreur lors de la déconnexion", "error");
         console.error("Error while logging out");
       }
     } catch (error) {
@@ -73,8 +91,25 @@ export default function Home() {
       <LoginModal
         open={loginModalOpen}
         onClose={() => setLoginModalOpen(false)}
-        onLogin={checkAuth}
+        onLogin={() => {
+          triggerSnackbar("Connexion réussie", "success");
+          checkAuth();
+        }}
       />
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
