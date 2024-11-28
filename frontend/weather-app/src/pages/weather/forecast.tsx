@@ -19,8 +19,15 @@ import {
 
 const WeatherPage = () => {
   const router = useRouter();
-  const { selectedLocation } = useLocation();
-  const { authenticated } = useAuth();
+  const { lat, lon } = router.query;
+  const {
+    selectedLocation,
+    setSelectedLocation,
+    favorites,
+    addFavorite,
+    removeFavorite,
+  } = useLocation();
+  const { authenticated, checkAuth } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   // Snackbar state
@@ -39,20 +46,16 @@ const WeatherPage = () => {
     setSnackbarOpen(true);
   };
 
-  const { lat, lon } = router.query;
-
   const [weatherData, setWeather] =
     useState<CurrentTodayAndForecastsByDayDto | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = useState<boolean>(false);
+
   const fetchWeather = async () => {
     setLoading(true);
     setError(null);
     try {
-      if (!lat || !lon) {
-        return;
-      }
-
       const locale = typeof window !== "undefined" ? navigator.language : "en";
       const response = await fetch(
         `/api/weather/forecast?lat=${lat}&lon=${lon}&locale=${
@@ -62,10 +65,26 @@ const WeatherPage = () => {
 
       const data = await response.json();
       setWeather(data);
+      if (!selectedLocation) {
+        setSelectedLocation({
+          id: 0,
+          latitude: Array.isArray(lat) ? lat[0] : lat || "",
+          longitude: Array.isArray(lon) ? lon[0] : lon || "",
+          localName: data.today.cityName,
+          name: data.today.cityName,
+        });
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : String(error));
     }
     setLoading(false);
+  };
+
+  const checkIfFavorite = () => {
+    const isFav = favorites.some(
+      (favorite) => favorite.latitude === lat && favorite.longitude === lon,
+    );
+    setIsFavorite(isFav);
   };
 
   const handleSaveLocation = async () => {
@@ -89,7 +108,30 @@ const WeatherPage = () => {
           throw new Error("Error while saving location");
         }
 
-        router.push("/");
+        addFavorite(selectedLocation);
+        setIsFavorite(true);
+        triggerSnackbar("Lieu ajouté à vos favoris", "success");
+      } catch (error) {
+        setError(error instanceof Error ? error.message : "An error occurred");
+      }
+    }
+  };
+
+  const handleDeleteLocation = async () => {
+    if (selectedLocation) {
+      try {
+        const response = await fetch(`/api/location/${lat}/${lon}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          throw new Error("Error while deleting location");
+        }
+
+        removeFavorite(selectedLocation);
+        setIsFavorite(false);
+        triggerSnackbar("Lieu supprimé de vos favoris", "success");
       } catch (error) {
         setError(error instanceof Error ? error.message : "An error occurred");
       }
@@ -100,7 +142,13 @@ const WeatherPage = () => {
     if (router.isReady && lat && lon) {
       fetchWeather();
     }
-  }, [lat, lon]);
+  }, [lat, lon, router.isReady]);
+
+  useEffect(() => {
+    if (authenticated && favorites.length > 0) {
+      checkIfFavorite();
+    }
+  }, [authenticated, favorites]);
 
   if (loading) {
     return (
@@ -132,9 +180,6 @@ const WeatherPage = () => {
 
   const { current, today, forecasts }: CurrentTodayAndForecastsByDayDto =
     weatherData;
-  function checkAuth() {
-    throw new Error("Function not implemented.");
-  }
 
   return (
     <Box p={2}>
@@ -150,14 +195,18 @@ const WeatherPage = () => {
       >
         <Box>
           <Box display="flex" alignItems="center">
-            <Typography variant="h6">{today.cityName}</Typography>
+            <Typography variant="h6">
+              {selectedLocation?.localName || today.cityName}
+            </Typography>
             <Button
               variant="contained"
               color="primary"
-              onClick={handleSaveLocation}
+              onClick={isFavorite ? handleDeleteLocation : handleSaveLocation}
               sx={{ ml: 2 }}
             >
-              Ajouter à mes favoris
+              {isFavorite
+                ? "Supprimer de mes favoris"
+                : "Ajouter à mes favoris"}
             </Button>
           </Box>
           <Typography variant="h4" fontWeight="bold">

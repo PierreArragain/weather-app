@@ -1,10 +1,12 @@
 import { Alert, Box, Button, Snackbar, Typography } from "@mui/material";
 import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import FavoriteList from "../components/favorite-list";
 import LoginModal from "../components/login-modal";
 import SearchBar from "../components/search-bar";
 import { useAuth } from "../providers/AuthContext";
+import { useLocation } from "../providers/LocationContext";
 import { LocationSuggestionDto } from "../types/location";
 
 interface HomeProps {
@@ -14,8 +16,14 @@ interface HomeProps {
 export default function Home() {
   const router = useRouter();
   const { authenticated, checkAuth } = useAuth();
+  const {
+    favorites,
+    addFavorite,
+    selectedLocation,
+    setSelectedLocation,
+    removeFavorite,
+  } = useLocation();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
-  const [favorites, setFavorites] = useState<LocationSuggestionDto[]>([]);
 
   // Snackbar state
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -36,8 +44,13 @@ export default function Home() {
   const handleSelect = (selectedOption: LocationSuggestionDto | null) => {
     if (selectedOption) {
       const { latitude, longitude } = selectedOption;
+      setSelectedLocation(selectedOption);
       router.push(`/weather/forecast?lat=${latitude}&lon=${longitude}`);
     }
+  };
+
+  const handleDelete = (favorite: LocationSuggestionDto) => {
+    removeFavorite(favorite);
   };
 
   const handleLogout = async () => {
@@ -58,29 +71,6 @@ export default function Home() {
       console.error("Network error:", error);
     }
   };
-
-  useEffect(() => {
-    const getUserListOfFavorites = async () => {
-      try {
-        const response = await fetch("/api/location/user-favorites", {
-          credentials: "include",
-        });
-
-        if (response.ok) {
-          const data: LocationSuggestionDto[] = await response.json();
-          setFavorites(data);
-        } else {
-          console.error("Error while fetching user favorites");
-        }
-      } catch (error) {
-        console.error("Network error:", error);
-      }
-    };
-
-    if (authenticated) {
-      getUserListOfFavorites();
-    }
-  }, [authenticated]);
 
   return (
     <Box sx={{ p: 3, maxWidth: 400, margin: "auto", textAlign: "center" }}>
@@ -118,20 +108,11 @@ export default function Home() {
       </Box>
 
       {authenticated && favorites.length > 0 && (
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Vos lieux favoris
-          </Typography>
-          <Box component="ul" sx={{ listStyle: "none", padding: 0 }}>
-            {favorites.map((favorite) => (
-              <Box component="li" key={favorite.name} sx={{ mb: 1 }}>
-                <Button variant="text" onClick={() => handleSelect(favorite)}>
-                  {favorite.name}
-                </Button>
-              </Box>
-            ))}
-          </Box>
-        </Box>
+        <FavoriteList
+          favorites={favorites}
+          onSelect={handleSelect}
+          onDelete={handleDelete}
+        />
       )}
 
       <LoginModal
