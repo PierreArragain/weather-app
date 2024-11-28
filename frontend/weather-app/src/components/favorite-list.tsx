@@ -1,18 +1,16 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Box, Button, Typography } from "@mui/material";
+import { useLocation } from "../providers/location-context";
 import { LocationSuggestionDto } from "../types/location";
 
 interface FavoriteListProps {
   favorites: LocationSuggestionDto[];
   onSelect: (selectedOption: LocationSuggestionDto | null) => void;
-  onDelete: (favorite: LocationSuggestionDto) => void;
 }
 
-const FavoriteList: React.FC<FavoriteListProps> = ({
-  favorites,
-  onSelect,
-  onDelete,
-}) => {
+const FavoriteList: React.FC<FavoriteListProps> = ({ favorites, onSelect }) => {
+  const { removeFavorite } = useLocation();
+
   const handleDelete = async (favorite: LocationSuggestionDto) => {
     try {
       const response = await fetch(
@@ -23,7 +21,7 @@ const FavoriteList: React.FC<FavoriteListProps> = ({
       );
 
       if (response.ok) {
-        onDelete(favorite);
+        removeFavorite(favorite);
       } else {
         console.error("Error while deleting favorite");
       }

@@ -1,12 +1,14 @@
-import { Alert, Box, Button, Snackbar, Typography } from "@mui/material";
+import { Alert, Box, Snackbar, Typography } from "@mui/material";
 import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
 import { useState } from "react";
+import { AuthActions } from "../components/auth-actions";
 import FavoriteList from "../components/favorite-list";
 import LoginModal from "../components/login-modal";
 import SearchBar from "../components/search-bar";
-import { useAuth } from "../providers/AuthContext";
-import { useLocation } from "../providers/LocationContext";
+import { useSnackbar } from "../hooks/useSnackbar";
+import { useAuth } from "../providers/auth-context";
+import { useLocation } from "../providers/location-context";
 import { LocationSuggestionDto } from "../types/location";
 
 interface HomeProps {
@@ -16,61 +18,16 @@ interface HomeProps {
 export default function Home() {
   const router = useRouter();
   const { authenticated, checkAuth } = useAuth();
-  const {
-    favorites,
-    addFavorite,
-    selectedLocation,
-    setSelectedLocation,
-    removeFavorite,
-  } = useLocation();
+  const { favorites, fetchFavorites, handleSelect } = useLocation();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
 
-  // Snackbar state
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
-    "success",
-  );
-
-  // Snackbar helpers
-  const handleSnackbarClose = () => setSnackbarOpen(false);
-
-  const triggerSnackbar = (message: string, severity: "success" | "error") => {
-    setSnackbarMessage(message);
-    setSnackbarSeverity(severity);
-    setSnackbarOpen(true);
-  };
-
-  const handleSelect = (selectedOption: LocationSuggestionDto | null) => {
-    if (selectedOption) {
-      const { latitude, longitude } = selectedOption;
-      setSelectedLocation(selectedOption);
-      router.push(`/weather/forecast?lat=${latitude}&lon=${longitude}`);
-    }
-  };
-
-  const handleDelete = (favorite: LocationSuggestionDto) => {
-    removeFavorite(favorite);
-  };
-
-  const handleLogout = async () => {
-    try {
-      const response = await fetch("/api/user/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        triggerSnackbar("Déconnexion réussie", "success");
-        checkAuth();
-      } else {
-        triggerSnackbar("Erreur lors de la déconnexion", "error");
-        console.error("Error while logging out");
-      }
-    } catch (error) {
-      console.error("Network error:", error);
-    }
-  };
+  const {
+    snackbarOpen,
+    snackbarMessage,
+    snackbarSeverity,
+    triggerSnackbar,
+    handleSnackbarClose,
+  } = useSnackbar();
 
   return (
     <Box sx={{ p: 3, maxWidth: 400, margin: "auto", textAlign: "center" }}>
@@ -78,49 +35,17 @@ export default function Home() {
         Recherchez un lieu pour obtenir la météo
       </Typography>
       <SearchBar onSelect={handleSelect} />
-
-      <Box sx={{ mt: 3 }}>
-        {authenticated ? (
-          <></>
-        ) : (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => router.push("/register")}
-            sx={{ mr: 2 }}
-          >
-            S'inscrire
-          </Button>
-        )}
-        {authenticated ? (
-          <Button variant="outlined" color="primary" onClick={handleLogout}>
-            Me déconnecter
-          </Button>
-        ) : (
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={() => setLoginModalOpen(true)}
-          >
-            Me connecter
-          </Button>
-        )}
-      </Box>
-
+      <AuthActions onLoginClick={() => setLoginModalOpen(true)} />
       {authenticated && favorites.length > 0 && (
-        <FavoriteList
-          favorites={favorites}
-          onSelect={handleSelect}
-          onDelete={handleDelete}
-        />
+        <FavoriteList favorites={favorites} onSelect={handleSelect} />
       )}
-
       <LoginModal
         open={loginModalOpen}
         onClose={() => setLoginModalOpen(false)}
         onLogin={() => {
           triggerSnackbar("Connexion réussie", "success");
           checkAuth();
+          fetchFavorites();
         }}
       />
       <Snackbar

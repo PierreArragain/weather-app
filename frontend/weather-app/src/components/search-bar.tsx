@@ -1,6 +1,6 @@
 import { Autocomplete, TextField } from "@mui/material";
 import { useState } from "react";
-import { useLocation } from "../providers/LocationContext";
+import { useLocation } from "../providers/location-context";
 import { LocationSuggestionDto } from "../types/location";
 
 interface SearchBarProps {
