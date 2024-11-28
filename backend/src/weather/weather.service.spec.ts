@@ -419,6 +419,7 @@ describe('WeatherService', () => {
               icon: '10n',
               description: 'pluie modérée',
             },
+            fullDate: new Date(1732387880 * 1000),
             maxTemp: 14.67,
             minTemp: 12.71,
             timezone: 0,
@@ -431,6 +432,7 @@ describe('WeatherService', () => {
               icon: '01d',
               description: 'ciel dégagé',
             },
+            fullDate: new Date(1732474280 * 1000),
             maxTemp: 15.67,
             minTemp: 13.71,
             timezone: 0,
@@ -557,6 +559,7 @@ describe('WeatherService', () => {
           minTemp: 12.71,
           numberDay: 23,
           timezone: 0,
+          fullDate: new Date(1732387880 * 1000),
           weatherSummary: {
             description: 'pluie modérée',
             icon: '10n',
@@ -565,6 +568,7 @@ describe('WeatherService', () => {
           weekDay: 'samedi',
         },
         {
+          fullDate: new Date(1732474280 * 1000),
           maxTemp: 15.67,
           minTemp: 13.71,
           numberDay: 24,
