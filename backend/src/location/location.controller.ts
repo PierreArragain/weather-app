@@ -47,11 +47,16 @@ export class LocationController {
     );
   }
   @UseGuards(AuthenticationGuard)
-  @Delete(':id')
+  @Delete(':latitude/:longitude')
   async deleteUserFavoriteLocation(
-    @Param('id') id: number,
+    @Param('latitude') latitude: string,
+    @Param('longitude') longitude: string,
     @SessionUserEmail() email: string,
   ): Promise<boolean> {
-    return this.locationService.deleteLocationFromUserFavorites(email, id);
+    return this.locationService.deleteLocationFromUserFavorites(
+      email,
+      latitude,
+      longitude,
+    );
   }
 }

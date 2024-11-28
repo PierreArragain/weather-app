@@ -1,18 +1,28 @@
 import { Alert, Box, Button, Snackbar, Typography } from "@mui/material";
 import { GetServerSidePropsContext } from "next";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { useState } from "react";
+import FavoriteList from "../components/favorite-list";
 import LoginModal from "../components/login-modal";
 import SearchBar from "../components/search-bar";
 import { useAuth } from "../providers/AuthContext";
+import { useLocation } from "../providers/LocationContext";
 import { LocationSuggestionDto } from "../types/location";
 
 interface HomeProps {
   initialData?: LocationSuggestionDto[];
 }
+
 export default function Home() {
   const router = useRouter();
   const { authenticated, checkAuth } = useAuth();
+  const {
+    favorites,
+    addFavorite,
+    selectedLocation,
+    setSelectedLocation,
+    removeFavorite,
+  } = useLocation();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   // Snackbar state
@@ -34,8 +44,13 @@ export default function Home() {
   const handleSelect = (selectedOption: LocationSuggestionDto | null) => {
     if (selectedOption) {
       const { latitude, longitude } = selectedOption;
+      setSelectedLocation(selectedOption);
       router.push(`/weather/forecast?lat=${latitude}&lon=${longitude}`);
     }
+  };
+
+  const handleDelete = (favorite: LocationSuggestionDto) => {
+    removeFavorite(favorite);
   };
 
   const handleLogout = async () => {
@@ -65,14 +80,18 @@ export default function Home() {
       <SearchBar onSelect={handleSelect} />
 
       <Box sx={{ mt: 3 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => router.push("/register")}
-          sx={{ mr: 2 }}
-        >
-          S'inscrire
-        </Button>
+        {authenticated ? (
+          <></>
+        ) : (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => router.push("/register")}
+            sx={{ mr: 2 }}
+          >
+            S'inscrire
+          </Button>
+        )}
         {authenticated ? (
           <Button variant="outlined" color="primary" onClick={handleLogout}>
             Me déconnecter
@@ -87,6 +106,14 @@ export default function Home() {
           </Button>
         )}
       </Box>
+
+      {authenticated && favorites.length > 0 && (
+        <FavoriteList
+          favorites={favorites}
+          onSelect={handleSelect}
+          onDelete={handleDelete}
+        />
+      )}
 
       <LoginModal
         open={loginModalOpen}

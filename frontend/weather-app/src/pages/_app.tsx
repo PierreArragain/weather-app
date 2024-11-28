@@ -1,15 +1,18 @@
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
 import { AuthProvider } from "../providers/AuthContext";
+import { LocationProvider } from "../providers/LocationContext";
 import theme from "../theme/theme";
 
 export default function MyApp({ Component, pageProps }: any) {
   return (
     <AuthProvider>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Component {...pageProps} />
-      </ThemeProvider>
+      <LocationProvider>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Component {...pageProps} />
+        </ThemeProvider>
+      </LocationProvider>
     </AuthProvider>
   );
 }

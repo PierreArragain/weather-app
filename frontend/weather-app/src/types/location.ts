@@ -1,6 +1,7 @@
 export interface LocationSuggestionDto {
+  id: number;
   name: string;
   localName: string;
-  latitude: number;
-  longitude: number;
+  latitude: string;
+  longitude: string;
 }

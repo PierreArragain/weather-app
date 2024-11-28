@@ -112,7 +112,11 @@ describe('LocationController', () => {
           .mockResolvedValue(true);
 
         expect(
-          await controller.deleteUserFavoriteLocation(1, 'test@example.com'),
+          await controller.deleteUserFavoriteLocation(
+            'test@example.com',
+            '48.8566',
+            '2.3522',
+          ),
         ).toBe(true);
       });
     });

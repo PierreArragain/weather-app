@@ -1,5 +1,6 @@
 import { Autocomplete, TextField } from "@mui/material";
 import { useState } from "react";
+import { useLocation } from "../providers/LocationContext";
 import { LocationSuggestionDto } from "../types/location";
 
 interface SearchBarProps {
@@ -11,6 +12,7 @@ interface SearchBarProps {
 export default function SearchBar({ onSelect }: SearchBarProps) {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [options, setOptions] = useState<LocationSuggestionDto[]>([]);
+  const { setSelectedLocation, selectedLocation } = useLocation();
 
   const handleSearch = async (searchTerm: string) => {
     setSearchTerm(searchTerm);
@@ -33,12 +35,17 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
     }
   };
 
+  const handleSelect = (selectedOption: LocationSuggestionDto | null) => {
+    setSelectedLocation(selectedOption);
+    onSelect(selectedOption);
+  };
+
   return (
     <Autocomplete
       options={options}
       getOptionLabel={(option) => `${option.localName}, ${option.name}`}
       onInputChange={(_, value) => handleSearch(value)}
-      onChange={(_, selectedOption) => onSelect(selectedOption)}
+      onChange={(_, selectedOption) => handleSelect(selectedOption)}
       renderInput={(params) => (
         <TextField
           {...params}
