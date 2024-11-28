@@ -1,6 +1,16 @@
-import { Box, CircularProgress, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Snackbar,
+  Typography,
+} from "@mui/material";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import LoginModal from "../../components/login-modal";
+import { useAuth } from "../../providers/AuthContext";
+import { useLocation } from "../../providers/LocationContext";
 import {
   CurrentTodayAndForecastsByDayDto,
   ForecastByDayDto,
@@ -9,6 +19,26 @@ import {
 
 const WeatherPage = () => {
   const router = useRouter();
+  const { selectedLocation } = useLocation();
+  const { authenticated } = useAuth();
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+
+  // Snackbar state
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
+    "success",
+  );
+
+  // Snackbar helpers
+  const handleSnackbarClose = () => setSnackbarOpen(false);
+
+  const triggerSnackbar = (message: string, severity: "success" | "error") => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
   const { lat, lon } = router.query;
 
   const [weatherData, setWeather] =
@@ -36,6 +66,34 @@ const WeatherPage = () => {
       setError(error instanceof Error ? error.message : String(error));
     }
     setLoading(false);
+  };
+
+  const handleSaveLocation = async () => {
+    if (selectedLocation) {
+      if (!authenticated) {
+        setLoginModalOpen(true);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/location", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(selectedLocation),
+        });
+
+        if (!response.ok) {
+          throw new Error("Error while saving location");
+        }
+
+        router.push("/");
+      } catch (error) {
+        setError(error instanceof Error ? error.message : "An error occurred");
+      }
+    }
   };
 
   useEffect(() => {
@@ -74,6 +132,10 @@ const WeatherPage = () => {
 
   const { current, today, forecasts }: CurrentTodayAndForecastsByDayDto =
     weatherData;
+  function checkAuth() {
+    throw new Error("Function not implemented.");
+  }
+
   return (
     <Box p={2}>
       {/* Current forecast */}
@@ -87,7 +149,17 @@ const WeatherPage = () => {
         mb={2}
       >
         <Box>
-          <Typography variant="h6">{today.cityName}</Typography>
+          <Box display="flex" alignItems="center">
+            <Typography variant="h6">{today.cityName}</Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSaveLocation}
+              sx={{ ml: 2 }}
+            >
+              Ajouter à mes favoris
+            </Button>
+          </Box>
           <Typography variant="h4" fontWeight="bold">
             {Math.round(current.temperature)}°C
           </Typography>
@@ -183,6 +255,28 @@ const WeatherPage = () => {
           </Box>
         ))}
       </Box>
+      <LoginModal
+        open={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
+        onLogin={() => {
+          triggerSnackbar("Connexion réussie", "success");
+          checkAuth();
+        }}
+      />
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

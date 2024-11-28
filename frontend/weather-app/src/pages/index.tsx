@@ -1,7 +1,7 @@
 import { Alert, Box, Button, Snackbar, Typography } from "@mui/material";
 import { GetServerSidePropsContext } from "next";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 import LoginModal from "../components/login-modal";
 import SearchBar from "../components/search-bar";
 import { useAuth } from "../providers/AuthContext";
@@ -10,10 +10,12 @@ import { LocationSuggestionDto } from "../types/location";
 interface HomeProps {
   initialData?: LocationSuggestionDto[];
 }
+
 export default function Home() {
   const router = useRouter();
   const { authenticated, checkAuth } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [favorites, setFavorites] = useState<LocationSuggestionDto[]>([]);
 
   // Snackbar state
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -57,6 +59,29 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    const getUserListOfFavorites = async () => {
+      try {
+        const response = await fetch("/api/location/user-favorites", {
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          const data: LocationSuggestionDto[] = await response.json();
+          setFavorites(data);
+        } else {
+          console.error("Error while fetching user favorites");
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+      }
+    };
+
+    if (authenticated) {
+      getUserListOfFavorites();
+    }
+  }, [authenticated]);
+
   return (
     <Box sx={{ p: 3, maxWidth: 400, margin: "auto", textAlign: "center" }}>
       <Typography variant="h4" gutterBottom>
@@ -65,14 +90,18 @@ export default function Home() {
       <SearchBar onSelect={handleSelect} />
 
       <Box sx={{ mt: 3 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => router.push("/register")}
-          sx={{ mr: 2 }}
-        >
-          S'inscrire
-        </Button>
+        {authenticated ? (
+          <></>
+        ) : (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => router.push("/register")}
+            sx={{ mr: 2 }}
+          >
+            S'inscrire
+          </Button>
+        )}
         {authenticated ? (
           <Button variant="outlined" color="primary" onClick={handleLogout}>
             Me déconnecter
@@ -87,6 +116,23 @@ export default function Home() {
           </Button>
         )}
       </Box>
+
+      {authenticated && favorites.length > 0 && (
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Vos lieux favoris
+          </Typography>
+          <Box component="ul" sx={{ listStyle: "none", padding: 0 }}>
+            {favorites.map((favorite) => (
+              <Box component="li" key={favorite.name} sx={{ mb: 1 }}>
+                <Button variant="text" onClick={() => handleSelect(favorite)}>
+                  {favorite.name}
+                </Button>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      )}
 
       <LoginModal
         open={loginModalOpen}
