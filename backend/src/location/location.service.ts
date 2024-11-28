@@ -34,10 +34,16 @@ export class LocationService {
     const user = await this.userRepository.findOneBy({
       email: email,
     });
-    let location = await this.locationRepository.findOneBy({
-      latitude: createLocationDto.latitude,
-      longitude: createLocationDto.longitude,
+    let location = await this.locationRepository.findOne({
+      where: {
+        latitude: createLocationDto.latitude,
+        longitude: createLocationDto.longitude,
+      },
+      relations: {
+        users: true,
+      },
     });
+
     if (!location) {
       location = {
         ...createLocationDto,
@@ -61,7 +67,8 @@ export class LocationService {
 
   async deleteLocationFromUserFavorites(
     userEmail: string,
-    locationId: number,
+    latitude: string,
+    longitude: string,
   ): Promise<boolean> {
     const user = await this.userRepository.findOneBy({
       email: userEmail,
@@ -72,7 +79,8 @@ export class LocationService {
     }
     const location = await this.locationRepository.findOne({
       where: {
-        id: locationId,
+        latitude,
+        longitude,
       },
       relations: {
         users: true,
