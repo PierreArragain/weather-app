@@ -60,7 +60,7 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
   return (
     <Box sx={{ position: "relative", width: "100%" }}>
       <TextField
-        label="Search location"
+        label="Rechercher un lieu"
         slotProps={{
           input: {
             startAdornment: (
