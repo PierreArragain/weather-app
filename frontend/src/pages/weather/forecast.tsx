@@ -68,8 +68,8 @@ const WeatherPage = () => {
       if (!selectedLocation) {
         setSelectedLocation({
           id: 0,
-          latitude: Array.isArray(lat) ? lat[0] : lat || "",
-          longitude: Array.isArray(lon) ? lon[0] : lon || "",
+          latitude: Array.isArray(lat) ? lat[0] : lat ?? "",
+          longitude: Array.isArray(lon) ? lon[0] : lon ?? "",
           localName: data.today.cityName,
           name: data.today.cityName,
         });
