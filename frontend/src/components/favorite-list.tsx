@@ -42,9 +42,10 @@ const FavoriteList: React.FC<FavoriteListProps> = ({ favorites, onSelect }) => {
             component="li"
             key={favorite.name}
             sx={{ mb: 1, borderRadius: 2, border: "1px solid #ccc" }}
+            justifyContent="space-between"
           >
             <Button variant="text" onClick={() => onSelect(favorite)}>
-              {favorite.name}
+              {favorite.localName}
             </Button>
             <Button
               variant="text"
