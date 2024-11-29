@@ -37,7 +37,12 @@ const FavoriteList: React.FC<FavoriteListProps> = ({ favorites, onSelect }) => {
       </Typography>
       <Box component="ul" sx={{ listStyle: "none", padding: 0 }}>
         {favorites.map((favorite) => (
-          <Box display="flex" component="li" key={favorite.name} sx={{ mb: 1 }}>
+          <Box
+            display="flex"
+            component="li"
+            key={favorite.name}
+            sx={{ mb: 1, borderRadius: 2, border: "1px solid #ccc" }}
+          >
             <Button variant="text" onClick={() => onSelect(favorite)}>
               {favorite.name}
             </Button>

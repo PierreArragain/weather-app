@@ -1,33 +1,39 @@
-import { Autocomplete, TextField } from "@mui/material";
-import { useState } from "react";
+import SearchIcon from "@mui/icons-material/Search";
+import {
+  Box,
+  InputAdornment,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  TextField,
+} from "@mui/material";
+import { useRef, useState } from "react";
 import { useLocation } from "../providers/location-context";
 import { LocationSuggestionDto } from "../types/location";
 
 interface SearchBarProps {
   onSelect: (selectedOption: LocationSuggestionDto | null) => void;
-
-  initialData?: LocationSuggestionDto[];
 }
 
 export default function SearchBar({ onSelect }: SearchBarProps) {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [options, setOptions] = useState<LocationSuggestionDto[]>([]);
-  const { setSelectedLocation, selectedLocation } = useLocation();
+  const [isFocused, setIsFocused] = useState<boolean>(false);
+  const { setSelectedLocation } = useLocation();
+  const debounceTimeout = useRef<NodeJS.Timeout>();
 
-  const handleSearch = async (searchTerm: string) => {
-    setSearchTerm(searchTerm);
-    const locale = typeof window !== "undefined" ? navigator.language : "en";
-
-    if (searchTerm.length > 2) {
+  const handleSearch = async (query: string) => {
+    if (query.length > 1) {
+      const locale = typeof window !== "undefined" ? navigator.language : "en";
       try {
         const response = await fetch(
-          `/api/location/search?location=${searchTerm}&locale=${
-            locale.split("-")[0]
-          }`,
+          `/api/location/search?location=${query}&locale=${locale.split("-")[0]}`,
         );
         const data = await response.json();
         setOptions(data);
       } catch (error) {
+        console.error("Search error :", error);
         setOptions([]);
       }
     } else {
@@ -35,25 +41,66 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
     }
   };
 
-  const handleSelect = (selectedOption: LocationSuggestionDto | null) => {
+  const handleInputChange = (query: string) => {
+    setSearchTerm(query);
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+    debounceTimeout.current = setTimeout(() => handleSearch(query), 300);
+  };
+
+  const handleSelect = (selectedOption: LocationSuggestionDto) => {
     setSelectedLocation(selectedOption);
     onSelect(selectedOption);
+    setSearchTerm(selectedOption.localName);
+    setOptions([]);
+    setIsFocused(false);
   };
 
   return (
-    <Autocomplete
-      options={options}
-      getOptionLabel={(option) => `${option.localName}, ${option.name}`}
-      onInputChange={(_, value) => handleSearch(value)}
-      onChange={(_, selectedOption) => handleSelect(selectedOption)}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label="Search location"
-          variant="outlined"
-          fullWidth
-        />
+    <Box sx={{ position: "relative", width: "100%" }}>
+      <TextField
+        label="Search location"
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          },
+        }}
+        variant="outlined"
+        fullWidth
+        value={searchTerm}
+        onChange={(e) => handleInputChange(e.target.value)}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setTimeout(() => setIsFocused(false), 200)}
+      />
+
+      {isFocused && options.length > 0 && (
+        <List
+          sx={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            bgcolor: "background.paper",
+            boxShadow: 1,
+            maxHeight: 200,
+            overflowY: "auto",
+            zIndex: 10,
+          }}
+        >
+          {options.map((option) => (
+            <ListItem key={option.id} disablePadding>
+              <ListItemButton onClick={() => handleSelect(option)}>
+                <ListItemText primary={`${option.localName}, ${option.name}`} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
       )}
-    />
+    </Box>
   );
 }
