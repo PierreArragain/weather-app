@@ -30,15 +30,22 @@ export default function Home() {
   } = useSnackbar();
 
   return (
-    <Box sx={{ p: 3, maxWidth: 400, margin: "auto", textAlign: "center" }}>
+    <Box
+      sx={{
+        p: 3,
+        maxWidth: 400,
+        margin: "auto",
+        textAlign: "center",
+      }}
+    >
       <Typography variant="h4" gutterBottom>
         Recherchez un lieu pour obtenir la météo
       </Typography>
       <SearchBar onSelect={handleSelect} />
-      <AuthActions onLoginClick={() => setLoginModalOpen(true)} />
       {authenticated && favorites.length > 0 && (
         <FavoriteList favorites={favorites} onSelect={handleSelect} />
       )}
+      <AuthActions onLoginClick={() => setLoginModalOpen(true)} />
       <LoginModal
         open={loginModalOpen}
         onClose={() => setLoginModalOpen(false)}
