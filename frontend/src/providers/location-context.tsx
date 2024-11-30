@@ -1,3 +1,4 @@
+import { useRouter } from "next/router";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { LocationSuggestionDto } from "../types/location";
 
@@ -7,6 +8,8 @@ interface LocationContextProps {
   favorites: LocationSuggestionDto[];
   addFavorite: (favorite: LocationSuggestionDto) => void;
   removeFavorite: (favorite: LocationSuggestionDto) => void;
+  fetchFavorites: () => void;
+  handleSelect: (selectedOption: LocationSuggestionDto | null) => void;
 }
 
 const LocationContext = createContext<LocationContextProps | undefined>(
@@ -16,26 +19,22 @@ const LocationContext = createContext<LocationContextProps | undefined>(
 export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const router = useRouter();
   const [selectedLocation, setSelectedLocation] =
     useState<LocationSuggestionDto | null>(null);
   const [favorites, setFavorites] = useState<LocationSuggestionDto[]>([]);
 
-  useEffect(() => {
-    // Fetch favorites from API or local storage
-    const fetchFavorites = async () => {
-      try {
-        const response = await fetch("/api/location/user-favorites", {
-          credentials: "include",
-        });
-        const data = await response.json();
-        setFavorites(data);
-      } catch (error) {
-        console.error("Failed to fetch favorites:", error);
-      }
-    };
-
-    fetchFavorites();
-  }, []);
+  const fetchFavorites = async () => {
+    try {
+      const response = await fetch("/api/location/user-favorites", {
+        credentials: "include",
+      });
+      const data = await response.json();
+      setFavorites(data);
+    } catch (error) {
+      console.error("Failed to fetch favorites:", error);
+    }
+  };
 
   const addFavorite = (favorite: LocationSuggestionDto) => {
     setFavorites((prevFavorites) => [...prevFavorites, favorite]);
@@ -47,6 +46,18 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({
     );
   };
 
+  const handleSelect = (selectedOption: LocationSuggestionDto | null) => {
+    if (selectedOption) {
+      const { latitude, longitude } = selectedOption;
+      setSelectedLocation(selectedOption);
+      router.push(`/weather/forecast?lat=${latitude}&lon=${longitude}`);
+    }
+  };
+
+  useEffect(() => {
+    fetchFavorites();
+  }, []);
+
   return (
     <LocationContext.Provider
       value={{
@@ -55,6 +66,8 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({
         favorites,
         addFavorite,
         removeFavorite,
+        fetchFavorites,
+        handleSelect,
       }}
     >
       {children}
