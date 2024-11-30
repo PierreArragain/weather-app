@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
+import { SnakeNamingStrategy } from './snake-naming.strategy';
 require('dotenv').config('../../../.env');
 
 @Injectable()
@@ -12,8 +13,10 @@ export class DatabaseConfiguration implements TypeOrmOptionsFactory {
       username: process.env.POSTGRES_USERNAME,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DATABASE,
+      namingStrategy: new SnakeNamingStrategy(),
       entities: ['dist/**/*.entity{.ts,.js}'],
-      synchronize: true,
+      synchronize: false,
+      migrations: [__dirname + '/migrations/*.js'],
     };
   }
 }
