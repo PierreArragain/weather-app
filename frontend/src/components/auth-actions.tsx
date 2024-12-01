@@ -25,7 +25,7 @@ export const AuthActions = ({ onLoginClick }: { onLoginClick: () => void }) => {
 
   if (authenticated) {
     return (
-      <Button variant="outlined" color="primary" onClick={handleLogout}>
+      <Button variant="text" color="primary" onClick={handleLogout}>
         Me déconnecter
       </Button>
     );

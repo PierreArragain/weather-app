@@ -1,3 +1,4 @@
+import { LocationOn } from "@mui/icons-material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Box, Button, Typography } from "@mui/material";
 import { useLocation } from "../providers/location-context";
@@ -44,7 +45,11 @@ const FavoriteList: React.FC<FavoriteListProps> = ({ favorites, onSelect }) => {
             sx={{ mb: 1, borderRadius: 2, border: "1px solid #ccc" }}
             justifyContent="space-between"
           >
-            <Button variant="text" onClick={() => onSelect(favorite)}>
+            <Button
+              startIcon={<LocationOn />}
+              variant="text"
+              onClick={() => onSelect(favorite)}
+            >
               {favorite.localName}
             </Button>
             <Button
