@@ -1,10 +1,10 @@
 # Build stage
-FROM node:18 AS build
+FROM node:22 AS build
 
 WORKDIR /app
 
 COPY package.json yarn.lock ./
-RUN yarn install
+RUN yarn install --frozen-lockfile --production=false
 
 COPY . .
 
@@ -14,7 +14,7 @@ ENV BACKEND_URL=${BACKEND_URL}
 RUN yarn build
 
 # Production stage
-FROM node:18-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ COPY --from=build /app/.next ./.next
 COPY --from=build /app/public ./public
 COPY --from=build /app/package.json /app/yarn.lock ./
 
-RUN yarn install --production
+RUN yarn install --frozen-lockfile --production
 
 ENV PORT=4200
 EXPOSE 4200
