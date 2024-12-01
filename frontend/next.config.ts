@@ -16,6 +16,15 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "openweathermap.org",
+        port: "",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

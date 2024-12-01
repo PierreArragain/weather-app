@@ -1,13 +1,14 @@
+import { Favorite, FavoriteBorder } from "@mui/icons-material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import {
   Alert,
   Box,
-  Button,
   CircularProgress,
   IconButton,
   Snackbar,
   Typography,
 } from "@mui/material";
+import Image from "next/image";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import LoginModal from "../../components/login-modal";
@@ -183,7 +184,7 @@ const WeatherPage = () => {
     weatherData;
 
   return (
-    <Box>
+    <Box maxWidth={1024} margin={"auto"}>
       <Box
         display="flex"
         justifyContent="space-between"
@@ -202,7 +203,6 @@ const WeatherPage = () => {
       <Box p={2}>
         {/* Current forecast */}
         <Box
-          display="flex"
           justifyContent="space-between"
           alignItems="center"
           borderRadius={2}
@@ -210,32 +210,55 @@ const WeatherPage = () => {
           p={3}
           mb={2}
         >
-          <Box>
-            <Typography variant="h6">
+          <Box display="flex">
+            <Typography alignContent="center" variant="h6">
               {selectedLocation?.localName || today.cityName}
             </Typography>
-
-            <Typography variant="h4" fontWeight="bold">
-              {Math.round(current.temperature)}°C
-            </Typography>
-            <Typography variant="subtitle1">{current.description}</Typography>
+            <Box alignItems="center">
+              {isFavorite ? (
+                <IconButton
+                  aria-label="Retirer des favoris"
+                  color="primary"
+                  onClick={handleDeleteLocation}
+                  sx={{ ml: 2 }}
+                  title="Retirer des favoris"
+                >
+                  <Favorite />
+                </IconButton>
+              ) : (
+                <IconButton
+                  aria-label="Ajouter aux favoris"
+                  color="primary"
+                  onClick={handleSaveLocation}
+                  sx={{ ml: 2 }}
+                  title="Ajouter aux favoris"
+                >
+                  <FavoriteBorder />
+                </IconButton>
+              )}
+            </Box>
           </Box>
-          <Box>
-            <img
-              src={`http://openweathermap.org/img/wn/${current.icon}@2x.png`}
-              alt="Météo actuelle"
-            />
-          </Box>
-        </Box>
-        <Box mb={2}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={isFavorite ? handleDeleteLocation : handleSaveLocation}
-            sx={{ ml: 2 }}
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
           >
-            {isFavorite ? "Supprimer de mes favoris" : "Ajouter à mes favoris"}
-          </Button>
+            <Box>
+              <Typography variant="h4" fontWeight="bold">
+                {Math.round(current.temperature)}°C
+              </Typography>
+              <Typography variant="subtitle1">{current.description}</Typography>
+            </Box>
+            <Box>
+              <Image
+                width={100}
+                height={100}
+                src={`https://openweathermap.org/img/wn/${current.icon}@2x.png`}
+                alt={"Météo actuelle : " + current.description}
+                title={current.description}
+              />
+            </Box>
+          </Box>
         </Box>
 
         {/* Today forecast */}
@@ -244,7 +267,12 @@ const WeatherPage = () => {
             Prévisions pour aujourd'hui
           </Typography>
 
-          <Box display="flex" overflow="auto" p={2}>
+          <Box
+            display="flex"
+            overflow="auto"
+            justifyContent="space-evenly"
+            p={2}
+          >
             {today.timestamps.map(
               (timestamp: ForecastWeatherTimestamp, index: number) => (
                 <Box
@@ -258,21 +286,24 @@ const WeatherPage = () => {
                   boxShadow={1}
                   minWidth={100}
                 >
-                  <Typography variant="subtitle2">
+                  <Typography variant="subtitle2" fontSize="1.2rem">
                     {new Date(timestamp.localTime).toLocaleDateString("fr-FR", {
                       weekday: "short",
                     })}
                   </Typography>
-                  <Typography variant="subtitle2">
+                  <Typography variant="subtitle2" fontSize="1.2rem">
                     {new Date(timestamp.localTime).toLocaleTimeString("fr-FR", {
                       hour: "2-digit",
                     })}
                   </Typography>
-                  <img
-                    src={`http://openweathermap.org/img/wn/${timestamp.icon}.png`}
+                  <Image
+                    width={100}
+                    height={100}
+                    src={`https://openweathermap.org/img/wn/${timestamp.icon}@2x.png`}
                     alt={timestamp.description}
+                    title={timestamp.description}
                   />
-                  <Typography variant="body2">
+                  <Typography variant="body2" fontSize="1.2rem">
                     {Math.round(timestamp.temperature)}°C
                   </Typography>
                 </Box>
@@ -291,9 +322,11 @@ const WeatherPage = () => {
             {forecasts.map((forecast: ForecastByDayDto, index: number) => (
               <Box
                 key={index}
-                display="flex"
-                justifyContent="space-evenly"
-                alignItems="center"
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-evenly",
+                  alignItems: "center",
+                }}
                 mx={1}
                 p={2}
                 mb={2}
@@ -302,17 +335,46 @@ const WeatherPage = () => {
                 boxShadow={1}
                 minWidth={300}
               >
-                <Typography variant="subtitle2">
-                  {forecast.weekDay} {forecast.numberDay}
-                </Typography>
-                <img
-                  src={`http://openweathermap.org/img/wn/${forecast.weatherSummary.icon}.png`}
-                  alt={forecast.weatherSummary.description}
-                />
-                <Typography variant="body2">
-                  {Math.round(forecast.minTemp)}°C /{" "}
-                  {Math.round(forecast.maxTemp)}°C
-                </Typography>
+                <Box
+                  width="37%"
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Typography fontSize="1.1rem" variant="subtitle2">
+                    {forecast.weekDay.charAt(0).toUpperCase() +
+                      forecast.weekDay.slice(1)}{" "}
+                    {forecast.numberDay}
+                  </Typography>
+                </Box>
+                <Box
+                  width="24%"
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Image
+                    width={75}
+                    height={75}
+                    src={`https://openweathermap.org/img/wn/${forecast.weatherSummary.icon}@2x.png`}
+                    alt={forecast.weatherSummary.description}
+                    title={forecast.weatherSummary.description}
+                  />
+                </Box>
+                <Box
+                  width="37%"
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Typography variant="body2" fontSize="1.1rem">
+                    {Math.round(forecast.minTemp)}°C /{" "}
+                    {Math.round(forecast.maxTemp)}°C
+                  </Typography>
+                </Box>
               </Box>
             ))}
           </Box>
